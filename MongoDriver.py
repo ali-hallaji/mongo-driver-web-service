@@ -12,7 +12,7 @@ import time
 import os
 log.startLogging(open('mongolog', 'w'), setStdout=False)
 
-class MongoTest(xmlrpc.XMLRPC):
+class MongoService(xmlrpc.XMLRPC):
 	
 	"""
 		Note: * is meaning that pass two args to def for name_db and name_col
@@ -47,7 +47,7 @@ class MongoTest(xmlrpc.XMLRPC):
 
 	def xmlrpc_getInfo(self):
 
-		return MongoTest.__doc__
+		return MongoService.__doc__
 
 	def GetTime(self, secs):
 		"""
@@ -289,7 +289,7 @@ class MongoTest(xmlrpc.XMLRPC):
 
 if __name__ == "__main__":
 	from twisted.internet import reactor
-	r = MongoTest()
+	r = MongoService()
 	reactor.listenTCP(7081, server.Site(r))
 	observer = log.PythonLoggingObserver()
 	#log.err(f, "sdsd")
