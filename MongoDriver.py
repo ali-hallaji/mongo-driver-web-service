@@ -55,7 +55,7 @@ class MongoTest(xmlrpc.XMLRPC):
             s.stop()
                 Kill server
         Examples:
-            exmaple...
+            s.asyncfetchAll('ibs', 'db_col', {"username" : "5722333"})
     """
     log.msg("Start the module")
     allowNone = True
