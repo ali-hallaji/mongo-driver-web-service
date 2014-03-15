@@ -19,13 +19,15 @@ class MongoTest(xmlrpc.XMLRPC):
 
         Use of this methods:
             s.asyncCount(name_db, name_col, val)
-                Pass arg by dict for finding and matching
+                count your record
+                pass args and pass val by dict for finding and matching
 
             s.asyncRemove(name_db, name_col, val)
-                Pass arg by dict for finding and matching
+                pass args and pass val by dict for finding and matching
 
             s.asyncfetchOne(name_db, name_col, val)
-                Pass arg by dict for finding and matching
+                find one
+                pass args and pass val by dict for finding and matching
 
             s.DropDB(name)
                 Drop your database. name=name of db
@@ -34,7 +36,8 @@ class MongoTest(xmlrpc.XMLRPC):
                 Set ensureIndex, name=key & num=(ASCENDING(1) or DESCENDING(-1))
 
             s.asyncfetchAll(name_db, name_col, val)
-                Pass arg by dict for finding
+                find all records that match with your val            
+                pass args and pass val by dict for finding
 
             s.asyncUpdate(name_db, name_col, val, VAL)
                 Pass two dict of args. dict1 = find keys, dict2 = set update keys
@@ -49,13 +52,15 @@ class MongoTest(xmlrpc.XMLRPC):
                 For bulking insert, number is chunk of data
 
             s.asyncIndexBulking(name_db, name_col, number)
+                import records pre define index in db
 
             s.asyncAddRecord(name_db, name_col, val)
+                add your record manually
 
             s.stop()
                 Kill server
         Examples:
-            s.asyncfetchAll('ibs', 'db_col', {"username" : "5722333"})
+            s.asyncfetchAll('ibs', 'db_col', {"username" : "5722333", "in_bytes" : "767568"})
     """
     log.msg("Start the module")
     allowNone = True
