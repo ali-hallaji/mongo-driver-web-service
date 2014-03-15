@@ -60,15 +60,18 @@ class MongoTest(xmlrpc.XMLRPC):
 			Drop DB
 			name: name of your db
 		"""
-		print ">>> Call DropDB"
+		log.msg(">>> Call DropDB")
+		start = time.time()
 		client = MongoClient()
 		all_db = client.database_names()
 		for i in all_db:
 			if str(name) == str(i):
 				c = Connection()
 				c.drop_database(str(name))
-				log.msg("Droped your DB")
-				return "Droped your DB"
+				now = time.time() - start
+				now_time = self.GetTime(now)
+				log.msg("Droped your DB at %s time" % now_time)
+				return "Droped your DB at %s time" % now_time
 		else:
 			log.msg("Faild to Drop your db")
 			return "Faild to Drop your db"
@@ -79,7 +82,7 @@ class MongoTest(xmlrpc.XMLRPC):
 		"""
 			added records by bulking insert
 		"""
-		self.start = time.time()
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
@@ -94,20 +97,20 @@ class MongoTest(xmlrpc.XMLRPC):
 				if float(i % int(number)) == 0:
 					db.db_col.insert(list_bulk)
 					list_bulk = []
-					now = time.time() - self.start
+					now = time.time() - start
 					now_time = self.GetTime(now)
 					print "\r%s records added by Bulking in my db after %s time\n " % (i,now_time)
-		now = time.time() - self.start
+		now = time.time() - start
 		now_time = self.GetTime(now)
 		print "\r%s records added by Bulking in my db after %s time\n " % (i,now_time)
-		return "bulking %s records in %s time" % (i, now_time)
+		return "bulking %s records at %s time" % (i, now_time)
 
 
 	def xmlrpc_asyncBulk(self, name_db, name_col, number):
 		"""
 			this is for async call function
 		"""
-		print ">>>call Bulking to Mongo"
+		log.msg(">>>call Bulking to Mongo")
 		d = deferToThread(self.xmlrpc_BulkToMongo, name_db, name_col, number)
 		return d
 
@@ -121,7 +124,7 @@ class MongoTest(xmlrpc.XMLRPC):
 		"""
 			added records by single inserting
 		"""
-		self.start = time.time()
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
@@ -132,17 +135,17 @@ class MongoTest(xmlrpc.XMLRPC):
 				i += 1
 				db.db_col.insert(doc)
 				if float(i % int(number)) == 0:
-					now = time.time() - self.start
+					now = time.time() - start
 					now_time = self.GetTime(now)
 					print "\r%s records added by inserting in my db after %s time\n " % (i,now_time)
 		print "\r%s records added by inserting in my db after %s time\n " % (i,now_time)
-		return "inserting %s records in %s time" % (i, now_time)
+		return "inserting %s records at %s time" % (i, now_time)
 
 	def xmlrpc_asyncInsert(self, name_db, name_col, number):
 		"""
 			this is for async call function
 		"""
-		print ">>>call Inserting to Mongo"
+		log.msg(">>>call Inserting to Mongo")
 		d = deferToThread(self.xmlrpc_InsertToMongo, name_db, name_col, number)
 		return d
 
@@ -150,12 +153,12 @@ class MongoTest(xmlrpc.XMLRPC):
 		"""
 			Import by mongo command
 		"""
-		self.start = time.time()
+		start = time.time()
 		if type == "csv":
 			os.system("mongoimport --host localhost --db ibs --collection ibs_col --type csv --file %s --headerline" % self.dir)
 		elif type == "json":
 			os.system("mongoimport --host localhost --db ibs --collection ibs_col --type json --file %s --headerline" % self.dir_json)
-		now = time.time() - self.start
+		now = time.time() - start
 		return "all Records add after %s time" % self.GetTime(now)
 
 	def xmlrpc_fetchOne(self, name_db, name_col, val):
@@ -163,20 +166,20 @@ class MongoTest(xmlrpc.XMLRPC):
 			single fetch from db
 			val: {find keys}
 		"""
-		print ">>> Call fetchOne"
-		self.start = time.time()
+		log.msg(">>> Call fetchOne")
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
 		seek = db.db_col.find_one(val)
-		now = time.time() - self.start
+		now = time.time() - start
 		return str(seek), self.GetTime(now)
 
 	def xmlrpc_asyncfetchOne(self, name_db, name_col, val):
 		"""
 			this is for async call function
 		"""
-		print ">>>call fetch one from Mongo"
+		log.msg(">>>call fetch one from Mongo")
 		d = deferToThread(self.xmlrpc_fetchOne, name_db, name_col, val)
 		return d
 
@@ -185,8 +188,8 @@ class MongoTest(xmlrpc.XMLRPC):
 			fetch all records when match keys
 			val: {find keys}
 		"""
-		print ">>> Call fetchAll"
-		self.start = time.time()
+		log.msg(">>> Call fetchAll")
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
@@ -195,14 +198,14 @@ class MongoTest(xmlrpc.XMLRPC):
 		for seek in db.db_col.find(val):
 			i += 1
 			tp += (str(seek), )
-		now = time.time() - self.start
+		now = time.time() - start
 		return tp, i, self.GetTime(now)
 
 	def xmlrpc_asyncfetchAll(self, name_db, name_col, val):
 		"""
 			this is for async call function
 		"""
-		print ">>>call fetch All from Mongo"
+		log.msg(">>>call fetch All from Mongo")
 		d = deferToThread(self.xmlrpc_fetchAll, name_db, name_col, val)
 		return d
 
@@ -213,20 +216,20 @@ class MongoTest(xmlrpc.XMLRPC):
 			val: {find keys}
 			VAL: {set to update keys}
 		"""
-		print ">>> Call update"
-		self.start = time.time()
+		log.msg(">>> Call update")
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
 		db.db_col.update(val, VAL)
-		now = time.time() - self.start
+		now = time.time() - start
 		return self.GetTime(now)
 
 	def xmlrpc_asyncUpdate(self, name_db, name_col, val, VAL):
 		"""
 			this is for async call function
 		"""
-		print ">>>call update record from Mongo"
+		log.msg(">>>call update record from Mongo")
 		d = deferToThread(self.xmlrpc_update, name_db, name_col, val, VAL)
 		return d
 
@@ -234,20 +237,20 @@ class MongoTest(xmlrpc.XMLRPC):
 		"""
 			delete records
 		"""
-		print ">>> Call remove"
-		self.start = time.time()
+		log.msg(">>> Call remove")
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
 		db.db_col.remove(val)
-		now = time.time() - self.start
+		now = time.time() - start
 		return self.GetTime(now)
 
 	def xmlrpc_asyncRemove(self, name_db, name_col, val):
 		"""
 			this is for async call function
 		"""
-		print ">>>call remove record from Mongo"
+		log.msg(">>>call remove record from Mongo")
 		d = deferToThread(self.xmlrpc_remove, name_db, name_col, val)
 		return d
 
@@ -255,40 +258,40 @@ class MongoTest(xmlrpc.XMLRPC):
 		"""
 			count records
 		"""
-		print ">>> Call count"
-		self.start = time.time()
+		log.msg(">>> Call count")
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
 
 		key = db.db_col.find(val).count()
-		now = time.time() - self.start
+		now = time.time() - start
 		return key, self.GetTime(now)
 
 	def xmlrpc_asyncCounte(self, name_db, name_col, val):
 		"""
 			this is for async call function
 		"""
-		print ">>>call count records from Mongo"
+		log.msg(">>>call count records from Mongo")
 		d = deferToThread(self.xmlrpc_count, name_db, name_col, val)
 		return d
 
 
 	def xmlrpc_ensureIndex(self, name_db, name_col, key, num):
-		print ">>> Call ensureIndex"
-		self.start = time.time()
+		log.msg(">>> Call ensureIndex")
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
 		db.db_col.ensure_index([(str(key), int(num))])
-		now = time.time() - self.start
-		return "set indexed in %s time" % self.GetTime(now)
+		now = time.time() - start
+		return "set indexed at %s time" % self.GetTime(now)
 
 	def xmlrpc_asyncEnsureIndex(self, name_db, name_col, key, num):
 		"""
 			this is for async call function
 		"""
-		print ">>>call ensureIndex to Mongo"
+		log.msg(">>>call ensureIndex to Mongo")
 		d = deferToThread(self.xmlrpc_ensureIndex, name_db, name_col, key, num)
 		return d
 
@@ -297,7 +300,7 @@ class MongoTest(xmlrpc.XMLRPC):
 		"""
 			Import Bulking in db by index
 		"""
-		self.start = time.time()
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
@@ -316,20 +319,20 @@ class MongoTest(xmlrpc.XMLRPC):
 				if float(i % int(number)) == 0:
 					db.db_col.insert(list_bulk)
 					list_bulk = []
-					now = time.time() - self.start
+					now = time.time() - start
 					now_time = self.GetTime(now)
 					print "\r%s records added by Bulking in my db after %s time\n " % (i,now_time)
 					
-		now = time.time() - self.start
+		now = time.time() - start
 		now_time = self.GetTime(now)
 		print "\r%s records added by Bulking in my db after %s time\n " % (i,now_time)
-		return "bulking %s records in %s time" % (i, now_time)
+		return "bulking %s records at %s time" % (i, now_time)
 
 	def xmlrpc_asyncIndexBulking(self, name_db, name_col, number):
 		"""
 			this is for async call function
 		"""
-		print ">>>call indexBulk to Mongo"
+		log.msg(">>>call indexBulk to Mongo")
 		d = deferToThread(self.xmlrpc_indexBulk, name_db, name_col, number)
 		return d
 
@@ -338,21 +341,21 @@ class MongoTest(xmlrpc.XMLRPC):
 			add record
 			val: pass dict of keys
 		"""
-		print ">>> Call AddRecord"
-		self.start = time.time()
+		log.msg(">>> Call AddRecord")
+		start = time.time()
 		client = MongoClient()
 		db = client[str(name_db)]
 		db_col = db[str(name_col)]
 		db.db_col.insert(val)	
-		now = time.time() - self.start
+		now = time.time() - start
 		now_time = self.GetTime(now)
-		return "added your record in %s time" % now_time
+		return "added your record at %s time" % now_time
 
 	def xmlrpc_asyncAddRecord(self, name_db, name_col, val):
 		"""
 			this is for async call function
 		"""
-		print ">>>call indexBulk to Mongo"
+		log.msg(">>>call indexBulk to Mongo")
 		d = deferToThread(self.xmlrpc_addRecord, name_db, name_col, number)
 		return d
 
@@ -365,7 +368,7 @@ class MongoTest(xmlrpc.XMLRPC):
 	def xmlrpc_fault(self):
 		f = failure.Failure()
 		log.err(f, "error")
-		raise xmlrpc.Fault(123, "Error!")
+		raise xmlrpc.Fault(123, "Kharabi!")
 
 
 
