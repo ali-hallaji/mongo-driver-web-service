@@ -99,10 +99,10 @@ class MongoTest(xmlrpc.XMLRPC):
 					list_bulk = []
 					now = time.time() - start
 					now_time = self.GetTime(now)
-					print "\r%s records added by Bulking in my db after %s time\n " % (i,now_time)
+					print "\r%s records added by Bulking in my db after %s time\n " % (i, now_time)
 		now = time.time() - start
 		now_time = self.GetTime(now)
-		print "\r%s records added by Bulking in my db after %s time\n " % (i,now_time)
+		print "\r%s records added by Bulking in my db after %s time\n " % (i, now_time)
 		return "bulking %s records at %s time" % (i, now_time)
 
 
