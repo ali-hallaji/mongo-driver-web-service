@@ -70,8 +70,8 @@ class MongoTest(xmlrpc.XMLRPC):
         xmlrpc.XMLRPC.__init__(self)
         print "start Driver"
         self.client = MongoClient(max_pool_size=200)
-        #self.dir = '/home/pythonu/Desktop/check.csv'
-        #self.dir_json = '/home/pythonu/Desktop/check.json'
+        self.dir = '/home/pythonu/Desktop/check.csv'
+        self.dir_json = '/home/pythonu/Desktop/check.json'
         self.Dict = {}
 
     def xmlrpc_getInfo(self, name=None):
