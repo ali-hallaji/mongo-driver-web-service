@@ -69,8 +69,9 @@ class MongoTest(xmlrpc.XMLRPC):
     def __init__(self):
         xmlrpc.XMLRPC.__init__(self)
         print "start Driver"
-        self.dir = '/home/pythonu/Desktop/check.csv'
-        self.dir_json = '/home/pythonu/Desktop/check.json'
+        self.client = MongoClient(max_pool_size=200)
+        #self.dir = '/home/pythonu/Desktop/check.csv'
+        #self.dir_json = '/home/pythonu/Desktop/check.json'
         self.Dict = {}
 
     def xmlrpc_getInfo(self, name=None):
@@ -95,8 +96,8 @@ class MongoTest(xmlrpc.XMLRPC):
         """
         log.msg(">>> Call DropDB")
         start = time.time()
-        client = MongoClient()
-        all_db = client.database_names()
+        
+        all_db = self.client.database_names()
         for i in all_db:
             if str(name) == str(i):
                 c = Connection()
@@ -116,8 +117,8 @@ class MongoTest(xmlrpc.XMLRPC):
             added records by bulking insert
         """
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
         list_bulk = []
 
@@ -128,7 +129,7 @@ class MongoTest(xmlrpc.XMLRPC):
                 i += 1
                 list_bulk.append(doc)
                 if float(i % int(number)) == 0:
-                    db.db_col.insert(list_bulk)
+                    db_col.insert(list_bulk)
                     list_bulk = []
                     now = time.time() - start
                     now_time = self.GetTime(now)
@@ -157,15 +158,15 @@ class MongoTest(xmlrpc.XMLRPC):
             added records by single inserting
         """
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
         with open(self.dir) as f:
             Dict = csv.DictReader(f)
             i = 0
             for doc in Dict:
                 i += 1
-                db.db_col.insert(doc)
+                db_col.insert(doc)
                 if float(i % int(number)) == 0:
                     now = time.time() - start
                     now_time = self.GetTime(now)
@@ -193,21 +194,24 @@ class MongoTest(xmlrpc.XMLRPC):
         now = time.time() - start
         return "all Records add after %s time" % self.GetTime(now)
 
-    def xmlrpc_fetchOne(self, name_db, name_col, val):
+    def xmlrpc_fetchOne(self, name_db, name_col, val=None):
         """
             single fetch from db
             val: {find keys}
         """
         log.msg(">>> Call fetchOne")
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
-        seek = db.db_col.find_one(val)
+	if val is None:
+		seek = db_col.find_one()
+	else:
+	        seek = db_col.find_one(val)
         now = time.time() - start
         return str(seek), self.GetTime(now)
 
-    def xmlrpc_asyncfetchOne(self, name_db, name_col, val):
+    def xmlrpc_asyncfetchOne(self, name_db, name_col, val=None):
         """
             this is for async call function
         """
@@ -215,25 +219,28 @@ class MongoTest(xmlrpc.XMLRPC):
         d = deferToThread(self.xmlrpc_fetchOne, name_db, name_col, val)
         return d
 
-    def xmlrpc_fetchAll(self, name_db, name_col, val):
+    def xmlrpc_fetchAll(self, name_db, name_col, val=None):
         """
             fetch all records when match keys
             val: {find keys}
         """
         log.msg(">>> Call fetchAll")
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
         tp = ()
         i = 0
-        for seek in db.db_col.find(val):
-            i += 1
-            tp += (str(seek), )
-        now = time.time() - start
-        return tp, i, self.GetTime(now)
+        try:
+            for seek in db_col.find(val):
+                i += 1
+                tp += (str(seek), )
+            now = time.time() - start
+            return tp, i, self.GetTime(now)
+        except:
+            return 'Nothing data'
 
-    def xmlrpc_asyncfetchAll(self, name_db, name_col, val):
+    def xmlrpc_asyncfetchAll(self, name_db, name_col, val=None):
         """
             this is for async call function
         """
@@ -250,10 +257,10 @@ class MongoTest(xmlrpc.XMLRPC):
         """
         log.msg(">>> Call update")
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
-        db.db_col.update(val, VAL)
+        db_col.update(val, VAL)
         now = time.time() - start
         return self.GetTime(now)
 
@@ -271,10 +278,10 @@ class MongoTest(xmlrpc.XMLRPC):
         """
         log.msg(">>> Call remove")
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
-        db.db_col.remove(val)
+        db_col.remove(val)
         now = time.time() - start
         return self.GetTime(now)
 
@@ -286,21 +293,23 @@ class MongoTest(xmlrpc.XMLRPC):
         d = deferToThread(self.xmlrpc_remove, name_db, name_col, val)
         return d
 
-    def xmlrpc_count(self, name_db, name_col, val):
+    def xmlrpc_count(self, name_db, name_col, val=None):
         """
             count records
         """
         log.msg(">>> Call count")
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
-
-        key = db.db_col.find(val).count()
+	if val is None:
+		key = db_col.count()
+	else:
+	        key = db_col.find(val).count()
         now = time.time() - start
         return key, self.GetTime(now)
 
-    def xmlrpc_asyncCount(self, name_db, name_col, val):
+    def xmlrpc_asyncCount(self, name_db, name_col, val=None):
         """
             this is for async call function
         """
@@ -311,10 +320,10 @@ class MongoTest(xmlrpc.XMLRPC):
     def xmlrpc_ensureIndex(self, name_db, name_col, key, num):
         log.msg(">>> Call ensureIndex")
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
-        db.db_col.ensure_index([(str(key), int(num))])
+        db_col.ensure_index([(str(key), int(num))])
         now = time.time() - start
         return "set indexed at %s time" % self.GetTime(now)
 
@@ -331,13 +340,13 @@ class MongoTest(xmlrpc.XMLRPC):
             Import Bulking in db by index
         """
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
-        db.db_col.ensure_index([('username', ASCENDING)])
-        db.db_col.ensure_index([('connection_log_id', DESCENDING)])
-        db.db_col.ensure_index([('login_time', DESCENDING)])
-        db.db_col.ensure_index([('logout_time', ASCENDING)])
+        db_col.ensure_index([('username', ASCENDING)])
+        db_col.ensure_index([('connection_log_id', DESCENDING)])
+        db_col.ensure_index([('login_time', DESCENDING)])
+        db_col.ensure_index([('logout_time', ASCENDING)])
         list_bulk = []
 
         with open(self.dir) as f:
@@ -347,7 +356,7 @@ class MongoTest(xmlrpc.XMLRPC):
                 i += 1
                 list_bulk.append(doc)
                 if float(i % int(number)) == 0:
-                    db.db_col.insert(list_bulk)
+                    db_col.insert(list_bulk)
                     list_bulk = []
                     now = time.time() - start
                     now_time = self.GetTime(now)
@@ -373,10 +382,10 @@ class MongoTest(xmlrpc.XMLRPC):
         """
         log.msg(">>> Call AddRecord")
         start = time.time()
-        client = MongoClient()
-        db = client[str(name_db)]
+        
+        db = self.client[str(name_db)]
         db_col = db[str(name_col)]
-        db.db_col.insert(val)
+        db_col.insert(val)
         now = time.time() - start
         now_time = self.GetTime(now)
         return "added your record at %s time" % now_time
